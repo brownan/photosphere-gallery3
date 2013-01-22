@@ -1,0 +1,5 @@
+name = Photosphere
+description = "Display Android Photosphere images"
+author_name = "Edouard Lafargue"
+author_url = "http://github.com/elafargue"
+version = 1
