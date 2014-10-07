@@ -23,12 +23,31 @@ class photosphere_event_Core {
 
    // Get XMP header for the item, and check whether this is a panorama
    $item = $theme->item();
+    if ($item->is_photo() && $item->mime_type == "image/jpeg") {
+        $exivDataRaw = array();
+        $exivData = array();
+        exec("exiv2 -p a " . escapeshellarg($item->file_path()), $exivDataRaw);
+        foreach ($exivDataRaw as $line)
+        {
+            $tokens = preg_split('/\s+/', $line, 4);
+            $exivData[ $tokens[0] ] = $tokens[3];
+        }
+        if ($exivData['Xmp.GPano.UsePanoramaViewer'] == "True" && $exivData['Xmp.GPano.ProjectionType'] == "equirectangular") {
 
-    $menu->append(Menu::factory("link")
-                  ->id("photosphere")
-                  ->label(t("View as Photosphere"))
-                  ->url("javascript:new Photosphere('" . $theme->item()->file_url() . "').loadPhotosphere(document.getElementById('g-photo'));")
-                  ->css_id("g-photosphere-link"));
+            $menu->append(Menu::factory("link")
+                      ->id("photosphere")
+                      ->label(t("View as Photosphere"))
+                      ->url("javascript: new Photosphere('" . urlencode(url::file("var/albums/".$item->relative_path())) . "').setEXIF({"
+                        ."'full_width': " . intval($exivData['Xmp.GPano.FullPanoWidthPixels']) . ","
+                        ."'full_height': " . intval($exivData['Xmp.GPano.FullPanoHeightPixels']) . ","
+                        ."'crop_width': " . intval($exivData['Xmp.GPano.CroppedAreaImageWidthPixels']) . ","
+                        ."'crop_height': " . intval($exivData['Xmp.GPano.CroppedAreaImageHeightPixels']) . ","
+                        ."'x': " . intval($exivData['Xmp.GPano.CroppedAreaLeftPixels']) . ","
+                        ."'y': " . intval($exivData['Xmp.GPano.CroppedAreaTopPixels'])
+                      ."}).loadPhotosphere(document.getElementById('g-photo'));")
+                      ->css_id("g-photosphere-link"));
+        }
+    }
   }
 
 }
